@@ -1,0 +1,126 @@
+{
+    "Version": "2023-11-23",
+    "Statement": [
+        {
+            "Sid": "LambdaPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:GetFunction",
+                "lambda:GetFunctionConfiguration",
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:ListVersionsByFunction",
+                "lambda:ListTags",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:PublishVersion",
+                "lambda:RemovePermission",
+                "lambda:InvokeFunction",
+                "lambda:TagResource"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3DeploymentBucketPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetEncryptionConfiguration",
+                "s3:PutEncryptionConfiguration"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3Permissions",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetEncryptionConfiguration",
+                "s3:PutEncryptionConfiguration"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CognitoPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "cognito-idp:CreateUserPool",
+                "cognito-idp:CreateUserPoolClient",
+                "cognito-idp:ListTagsForResource",
+                "cognito-idp:DescribeUserPool",
+                "cognito-idp:UpdateUserPool",
+                "cognito-idp:DeleteUserPool",
+                "cognito-idp:DeleteUserPoolClient"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SESSendEmailPermission",
+            "Effect": "Allow",
+            "Action": [
+                "ses:SendEmail",
+                "ses:SendRawEmail"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudFormationPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateChangeSet",
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResource",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:ListStackResources",
+                "cloudformation:ValidateTemplate"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:CreateRole",
+                "iam:CreatePolicy",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:AttachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:PassRole"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutBucketPolicy",
+                "logs:CreateLogGroup",
+                "logs:TagResource",
+                "logs:DeleteLogGroup",
+                "logs:DescribeLogGroups",
+                "s3:GetBucketPolicy",
+                "s3:DeleteBucketPolicy",
+                "SNS:SetSMSAttributes"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

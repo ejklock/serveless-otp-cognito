@@ -1,0 +1,180 @@
+org: ejklock
+app: otp-cognito-demo
+service: otp-cognito-demo
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-offline-sns
+
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+
+custom:
+  # replace with your verified SES domain
+  domain: localhost
+  serverless-offline-sns:
+    port: 4002 # a free port for the sns server to run on
+    debug: false
+
+functions:
+  hello:
+    handler: ./src/functions/hello.default
+  preSignUp:
+    handler: ./src/functions/pre-sign-up.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action: cognito-idp:AdminGetUser
+        Resource:
+          - '*'
+
+  defineAuthChallenge:
+    handler: src/functions/define-auth-challenge.default
+    iamRoleStatements:
+      - Effect: Allow
+        Action: cognito-idp:AdminUpdateUserAttributes
+        Resource: '*'
+
+  createAuthChallenge:
+    handler: ./src/functions/create-auth-challenge.default
+    environment:
+      SES_FROM_ADDRESS: noreply@${self:custom.domain}
+    iamRoleStatements:
+      - Effect: Allow
+        Action: ses:SendEmail
+        Resource: '*'
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: '*'
+      - Effect: Allow
+        Action: cognito-idp:AdminGetUser
+        Resource: '*'
+
+  verifyAuthChallengeResponse:
+    handler: ./src/functions/verify-auth-challenge-response.default
+
+resources:
+  Resources:    
+    OtpUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UsernameConfiguration:
+          CaseSensitive: false
+        UsernameAttributes:
+          - email
+        Policies:
+          # this is only to satisfy Cognito requirements
+          # we won't be using passwords, but we also don't
+          # want weak passwords in the system ;-)
+          PasswordPolicy:
+            MinimumLength: 16
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireUppercase: true
+            RequireSymbols: true
+        Schema:
+          - AttributeDataType: String
+            Mutable: false
+            Required: true
+            Name: name
+            StringAttributeConstraints: 
+              MinLength: '3'
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: true
+            Name: family_name
+            StringAttributeConstraints: 
+              MinLength: '3'
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: false
+            Name: cpf
+            StringAttributeConstraints: 
+              MinLength: '11'
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: false
+            Name: treatment
+            StringAttributeConstraints: 
+              MinLength: '2'
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: true
+            Name: locale
+            StringAttributeConstraints: 
+              MinLength: '2'
+          
+          - AttributeDataType: Boolean
+            Mutable: false
+            Required: false
+            Name: terms_privacy_agreed
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: true
+            Name: email
+            StringAttributeConstraints: 
+              MinLength: '8'
+          
+          - AttributeDataType: String
+            Mutable: false
+            Required: true
+            Name: phone_number
+        
+        LambdaConfig:
+          PreSignUp: !GetAtt PreSignUpLambdaFunction.Arn
+          DefineAuthChallenge: !GetAtt DefineAuthChallengeLambdaFunction.Arn
+          CreateAuthChallenge: !GetAtt CreateAuthChallengeLambdaFunction.Arn
+          VerifyAuthChallengeResponse: !GetAtt VerifyAuthChallengeResponseLambdaFunction.Arn
+
+    WebUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: web
+        UserPoolId: !Ref OtpUserPool
+        ExplicitAuthFlows:
+          - ALLOW_CUSTOM_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        PreventUserExistenceErrors: ENABLED
+
+    UserPoolPreSignUpLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:invokeFunction
+        Principal: cognito-idp.amazonaws.com
+        FunctionName: !Ref PreSignUpLambdaFunction
+        SourceArn: !GetAtt OtpUserPool.Arn
+
+    UserPoolDefineAuthChallengeLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:invokeFunction
+        Principal: cognito-idp.amazonaws.com
+        FunctionName: !Ref DefineAuthChallengeLambdaFunction
+        SourceArn: !GetAtt OtpUserPool.Arn
+
+    UserPoolCreateAuthChallengeLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:invokeFunction
+        Principal: cognito-idp.amazonaws.com
+        FunctionName: !Ref CreateAuthChallengeLambdaFunction
+        SourceArn: !GetAtt OtpUserPool.Arn
+
+    UserPoolVerifyAuthChallengeResponseLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:invokeFunction
+        Principal: cognito-idp.amazonaws.com
+        FunctionName: !Ref VerifyAuthChallengeResponseLambdaFunction
+        SourceArn: !GetAtt OtpUserPool.Arn
